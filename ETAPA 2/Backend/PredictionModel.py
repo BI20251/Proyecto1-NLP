@@ -1,3 +1,4 @@
+import json
 import unicodedata
 import re
 from num2words import num2words
@@ -75,4 +76,12 @@ class Model:
         return vectorizer.fit_transform(data)
 
     def make_prediction(self, X_data):
-        return self.model.predict_proba(X_data)
+        proba = self.model.predict_proba(X_data) 
+        clases = self.model.classes_ 
+        
+        predicciones = []
+        for prob in proba:
+            max_index = prob.argmax()  
+            predicciones.append({"c": str(clases[max_index]), "p": float(prob[max_index])})
+        
+        return json.dumps(predicciones)
