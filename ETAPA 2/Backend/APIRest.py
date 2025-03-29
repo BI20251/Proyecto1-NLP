@@ -1,4 +1,5 @@
 import shutil
+from fastapi import UploadFile, File
 from typing import Optional
 from joblib import load
 from fastapi import FastAPI, File, HTTPException, UploadFile
@@ -6,8 +7,18 @@ from fastapi.responses import JSONResponse
 import pandas as pd
 import PredictionModel
 
+import shutil
+import os
 app = FastAPI()
+from fastapi.middleware.cors import CORSMiddleware
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # o ["http://localhost:3000"]
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/")
 def read_root():
@@ -42,7 +53,18 @@ def predecir(path:str):
    X_data=  data['Titulo'].astype(str) + " " + data['Descripcion'].astype(str)
    vectores = model.Vectorizer(X_data)
    prediciones=model.make_prediction(vectores)
-   return prediciones
+   return {"predicciones": prediciones.tolist()}
+
+
+@app.post("/upload")
+async def upload_file(file: UploadFile = File(...)):
+    try:
+        path = f"../Data/{file.filename}"
+        with open(path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        return {"mensaje": "Archivo guardado con éxito", "filename": file.filename}
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
 
     
 @app.get("/reentrenar/{path}")
