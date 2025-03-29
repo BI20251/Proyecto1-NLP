@@ -76,15 +76,12 @@ class Model:
         return vectorizer.fit_transform(data)
 
     def make_prediction(self, X_data):
-        proba = self.model.predict_proba(X_data)  # Obtiene las probabilidades
-        clases = self.model.classes_  # Obtiene los nombres de las clases
+        proba = self.model.predict_proba(X_data) 
+        clases = self.model.classes_ 
         
         predicciones = []
         for prob in proba:
-            max_index = prob.argmax()  # Índice de la clase con mayor probabilidad
-            predicciones.append({
-                "clase": str(clases[max_index]),  # Convertimos a string por seguridad
-                "probabilidad": float(prob[max_index])  # Convertimos a float para JSON válido
-            })
+            max_index = prob.argmax()  
+            predicciones.append({"c": str(clases[max_index]), "p": float(prob[max_index])})
         
         return json.dumps(predicciones)

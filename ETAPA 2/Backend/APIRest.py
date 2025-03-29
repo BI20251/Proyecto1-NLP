@@ -33,7 +33,7 @@ async def upload_file(file: UploadFile = File()):
 @app.get("/predecir/{path}")
 def predecir(path:str):
    path = "../Data/" + path
-   data=pd.read_csv(path, sep=',')
+   data=pd.read_csv(path, sep=';')
    
    model = PredictionModel.Model()
    data = model.remove_duplicates(data)
