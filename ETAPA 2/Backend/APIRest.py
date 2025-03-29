@@ -1,7 +1,7 @@
 import shutil
 from typing import Optional
 from joblib import load
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
 import pandas as pd
 import PredictionModel
@@ -43,3 +43,25 @@ def predecir(path:str):
    vectores = model.Vectorizer(X_data)
    prediciones=model.make_prediction(vectores)
    return prediciones
+
+    
+@app.get("/reentrenar/{path}")
+async def reentrenar(path: str):
+    path = "../Data/" + path
+
+    try:
+        data = pd.read_csv(path, sep=';')
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="Archivo no encontrado")
+    
+    if 'Label' not in data.columns:
+        raise HTTPException(status_code=400, detail="El archivo debe contener una columna 'label' con las clases verdaderas.")
+
+    
+    model = PredictionModel.Model()
+
+    try:
+        resultado = model.reentrenar_modelo(data)
+        return JSONResponse(content=resultado)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
