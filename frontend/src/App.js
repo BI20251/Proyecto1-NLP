@@ -9,61 +9,61 @@ function App() {
   const [cargando, setCargando] = useState(false);
 
   const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
-    setNombreArchivo(e.target.files[0].name);
+    const archivo = e.target.files[0];
+    setFile(archivo);
+    setNombreArchivo(archivo.name);
   };
 
   const handleUpload = async () => {
     if (!file) return alert('Por favor selecciona un archivo CSV');
-
+  
     const formData = new FormData();
     formData.append('file', file);
-
+  
     try {
       setCargando(true);
-    
+  
       // 📤 Subir archivo
       await axios.post('http://localhost:8000/upload', formData);
-    
-      // 📥 Llamar al endpoint de predicción
+  
+      // 📥 Obtener predicciones
       const response = await axios.get(`http://localhost:8000/predecir/${nombreArchivo}`);
-    
-      const resultados = response.data.predicciones.map((prob) => {
-        return {
-          prediccion: prob[1] > 0.5 ? "FAKE" : "REAL",
-          probabilidad: prob[1].toFixed(4)
-        };
-      });
-    
+  
+      // 🔍 Verifica si predicciones es un string (como en tu caso actual)
+      let data = response.data.predicciones;
+  
+      if (typeof data === 'string') {
+        data = JSON.parse(data);
+      }
+  
+      const resultados = data.map((item) => ({
+        prediccion: item.c === "1" ? "FAKE" : "REAL",
+        probabilidad: parseFloat(item.p).toFixed(4),
+      }));
+  
       setPredicciones(resultados);
       setCargando(false);
-    
+  
     } catch (error) {
       console.error('Error al procesar:', error);
-    
+  
       if (error.response) {
         console.error('Respuesta del backend:', error.response.data);
         alert("Error del servidor: " + JSON.stringify(error.response.data));
       } else {
         alert("Error al conectar con la API. Revisa la consola.");
       }
-    
+  
       setCargando(false);
     }
-    
   };
-
   
+
   return (
     <div style={{ maxWidth: 600, margin: "0 auto", padding: 40, fontFamily: "Arial, sans-serif" }}>
-      <h2 style={{ marginBottom: 20 }}>📰 Clasificador de Noticias Falsas</h2>
-  
-      <input
-        type="file"
-        accept=".csv"
-        onChange={handleFileChange}
-        style={{ marginBottom: 10 }}
-      />
+      <h2>📰 Clasificador de Noticias Falsas</h2>
+
+      <input type="file" accept=".csv" onChange={handleFileChange} />
       <br />
       <button
         onClick={handleUpload}
@@ -79,9 +79,9 @@ function App() {
       >
         Enviar y Predecir
       </button>
-  
+
       {cargando && <p style={{ marginTop: 20 }}>⏳ Cargando predicciones...</p>}
-  
+
       {predicciones.length > 0 && (
         <div style={{ marginTop: 30 }}>
           <h3>📊 Resultados:</h3>
@@ -107,8 +107,6 @@ function App() {
       )}
     </div>
   );
-  
 }
 
 export default App;
-

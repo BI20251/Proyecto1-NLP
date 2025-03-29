@@ -6,7 +6,7 @@ from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import JSONResponse
 import pandas as pd
 import PredictionModel
-
+import json
 import shutil
 import os
 app = FastAPI()
@@ -52,8 +52,9 @@ def predecir(path:str):
    data['Descripcion'] = model.pipelinePreprocess.transform(data['Descripcion'])
    X_data=  data['Titulo'].astype(str) + " " + data['Descripcion'].astype(str)
    vectores = model.Vectorizer(X_data)
-   prediciones=model.make_prediction(vectores)
-   return {"predicciones": prediciones.tolist()}
+   predicciones=model.make_prediction(vectores)
+   return {"predicciones": predicciones}
+
 
 
 @app.post("/upload")
