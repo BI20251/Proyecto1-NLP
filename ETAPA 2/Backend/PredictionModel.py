@@ -1,3 +1,4 @@
+import json
 import unicodedata
 import re
 from num2words import num2words
@@ -75,4 +76,15 @@ class Model:
         return vectorizer.fit_transform(data)
 
     def make_prediction(self, X_data):
-        return self.model.predict_proba(X_data)
+        proba = self.model.predict_proba(X_data)  # Obtiene las probabilidades
+        clases = self.model.classes_  # Obtiene los nombres de las clases
+        
+        predicciones = []
+        for prob in proba:
+            max_index = prob.argmax()  # Índice de la clase con mayor probabilidad
+            predicciones.append({
+                "clase": str(clases[max_index]),  # Convertimos a string por seguridad
+                "probabilidad": float(prob[max_index])  # Convertimos a float para JSON válido
+            })
+        
+        return json.dumps(predicciones)
