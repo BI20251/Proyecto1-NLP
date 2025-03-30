@@ -7,6 +7,8 @@ function App() {
   const [predicciones, setPredicciones] = useState([]);
   const [nombreArchivo, setNombreArchivo] = useState('');
   const [cargando, setCargando] = useState(false);
+  const [metricas, setMetricas] = useState(null);
+
 
   const handleFileChange = (e) => {
     const archivo = e.target.files[0];
@@ -58,7 +60,30 @@ function App() {
     }
   };
   
-
+  const handleReentrenar = async () => {
+    if (!file) return alert('Por favor selecciona un archivo CSV para reentrenar');
+  
+    const formData = new FormData();
+    formData.append('file', file);
+  
+    try {
+      setCargando(true);
+  
+      // 📤 Subir archivo al backend
+      await axios.post('http://localhost:8000/upload', formData);
+  
+      // 📥 Llamar al endpoint de reentrenamiento
+      const response = await axios.get(`http://localhost:8000/reentrenar/${nombreArchivo}`);
+      setMetricas(response.data);
+      setCargando(false);
+  
+    } catch (error) {
+      console.error('Error al reentrenar:', error);
+      alert('Hubo un error al reentrenar el modelo. Revisa la consola.');
+      setCargando(false);
+    }
+  };
+  
   return (
     <div style={{ maxWidth: 600, margin: "0 auto", padding: 40, fontFamily: "Arial, sans-serif" }}>
       <h2>📰 Clasificador de Noticias Falsas</h2>
@@ -79,6 +104,20 @@ function App() {
       >
         Enviar y Predecir
       </button>
+      <button
+          onClick={handleReentrenar}
+          style={{
+            marginTop: 10,
+            padding: "8px 16px",
+            backgroundColor: "#28a745",
+            color: "white",
+            border: "none",
+            borderRadius: 4,
+            cursor: "pointer"
+          }}
+        >
+          Reentrenar Modelo
+        </button>
 
       {cargando && <p style={{ marginTop: 20 }}>⏳ Cargando predicciones...</p>}
 
@@ -101,6 +140,18 @@ function App() {
                   <td style={{ padding: 8, border: "1px solid #ccc" }}>{p.probabilidad}</td>
                 </tr>
               ))}
+              {metricas && (
+                <div style={{ marginTop: 30 }}>
+                  <h3>📈 Métricas del Reentrenamiento:</h3>
+                  <ul>
+                    <li><b>Accuracy:</b> {metricas["Acuracy"].toFixed(4)}</li>
+                    <li><b>Precision:</b> {metricas["Precision"].toFixed(4)}</li>
+                    <li><b>Recall:</b> {metricas["Recall"].toFixed(4)}</li>
+                    <li><b>F1 Score:</b> {metricas["F1 Score"].toFixed(4)}</li>
+                  </ul>
+                </div>
+              )}
+
             </tbody>
           </table>
         </div>
